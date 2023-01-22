@@ -111,6 +111,10 @@ class GeopardieHandlersMixin:
             for button in row.components:
                 button.disabled = True
                 
+        # Edit message (without responding to interaction)
+        await ctx.message.edit(embed=ctx.message.embeds[0],
+                               components=ctx.message.components)
+                
         # Handle stale buttons
         if (author_id, message_id) not in self.result_sessions:
             return await ctx.send("This poll has been closed for too long!",
