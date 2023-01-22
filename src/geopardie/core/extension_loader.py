@@ -12,6 +12,7 @@ def load_extensions(bot: CustomClient):
     # go through all folders in the directory and load the extensions from all files
     # Note: files must end in .py
     bot.load_extension("geopardie.extensions.geopardie_game")
+    # bot.load_extension("geopardie.extensions.user_analyzer")
 
     bot.logger.info(
         f"< {len(bot.interactions.get(0, []))} > Global Interactions Loaded")
