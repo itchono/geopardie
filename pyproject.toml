@@ -23,7 +23,7 @@ version = "0.1.0"
 homepage = "https://github.com/itchono/geopardie"
 
 [tool.setuptools.packages.find]
-include = ["geopardie"]
+include = ["geopardie", "geopardie.*"]
 where = ["src"]
 
 [tool.autopep8]
