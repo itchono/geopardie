@@ -72,4 +72,7 @@ class GeopardieSessionResult:
     num_votes: list[int]
     author: User
     position: int = 0
+    
+    def __len__(self):
+        return len(self.answers)
 

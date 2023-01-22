@@ -1,12 +1,13 @@
 from naff import Button, InteractionContext, ButtonStyles
 from geopardie.framework.geopardie_constructs import (PollButtonSession,
                                                       GeopardieSessionResult)
-from geopardie.framework.embed_prefabs import geopardie_showcase_start_embed
+from geopardie.framework.embed_prefabs import (geopardie_showcase_start_embed,
+                                               geopardie_showcase_next_embed)
 
 
 class GeopardieHandlersMixin:
     
-    result_sessions: dict = {}
+    result_sessions: dict[tuple[int, int], GeopardieSessionResult] = {}
     
     
     async def handle_gp_vote(self, ctx: InteractionContext):
@@ -66,7 +67,7 @@ class GeopardieHandlersMixin:
                                         [len(session.voted_ids) for session in sessions],
                                         ctx.author)
         
-        self.result_sessions[ctx.author.id] = result
+        self.result_sessions[(ctx.author.id, ctx.message.id)] = result
 
         # Disable all buttons
         for row in components:
@@ -80,22 +81,55 @@ class GeopardieHandlersMixin:
         
         
         # Construct Response
+        # Encode state using author id and message id
+        hex_enc_author_id = hex(ctx.author.id)[2:]
+        hex_enc_message_id = hex(ctx.message.id)[2:]
         
         response_embed = geopardie_showcase_start_embed(ctx, result)
         response_buttons = [Button(style=ButtonStyles.PRIMARY,
                                    label="Show Next Answer",
                                    emoji = "⬇️",
-                                   custom_id=f"gp_next_{ctx.author.id}")]
+                                   custom_id=f"gp_next_{hex_enc_author_id}_{hex_enc_message_id}")]
 
         await ctx.send(embed=response_embed, components=response_buttons)
 
 
     async def handle_gp_next(self, ctx: InteractionContext):
+        
+        author_id_hex, message_id_hex = ctx.custom_id[8:].split("_")
+        author_id = int(author_id_hex, 16)
+        message_id = int(message_id_hex, 16)
+        
         # Check that clicker is author
-        if ctx.author.id != int(ctx.custom_id[8:]):
+        if ctx.author.id != author_id:
             return await ctx.send("You are not the author of this poll!",
                                   ephemeral=True)
             
-        await ctx.send(str(self.result_sessions[ctx.author.id]))
+        # Disable button
+        for row in ctx.message.components:
+            button: Button
+            for button in row.components:
+                button.disabled = True
+                
+        # Handle stale buttons
+        if (author_id, message_id) not in self.result_sessions:
+            return await ctx.send("This poll has been closed for too long!",
+                                  ephemeral=True)
+            
+        session = self.result_sessions[(author_id, message_id)]
         
+        response_embed = geopardie_showcase_next_embed(ctx, session)
         
+        if session.position < len(session.answers) - 1:
+            # Construct Response
+            
+            response_buttons = [Button(style=ButtonStyles.PRIMARY,
+                                       label="Show Next Answer",
+                                       emoji = "⬇️",
+                                       custom_id=f"gp_next_{author_id_hex}_{message_id_hex}")]
+            await ctx.send(embed=response_embed, components=response_buttons)
+        else:
+            await ctx.send(embed=response_embed)
+        
+        # Advance session
+        session.position += 1

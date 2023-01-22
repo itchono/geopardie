@@ -40,7 +40,12 @@ def geopardie_showcase_start_embed(ctx: InteractionContext, results: GeopardieSe
     
     return embed
     
+def geopardie_showcase_next_embed(ctx: InteractionContext, results: GeopardieSessionResult):
     
+    idx = results.position
     
+    embed = Embed(title=f"{idx+1}) {results.answers[idx]}",
+                  description=f"**{results.num_votes[idx]} votes**")
     
+    return embed
     
