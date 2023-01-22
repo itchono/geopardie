@@ -1,9 +1,10 @@
 # Sniffs all users on the server and scans their UUIDs for collisions in
 # the bottom n bits
 
+from naff import (Extension, InteractionContext, OptionTypes, slash_command,
+                  slash_option)
+
 from geopardie.core.bot_client import CustomClient
-from naff import (Extension, InteractionContext, OptionTypes,
-                  slash_command, slash_option)
 
 
 class UserAnalysisExtension(Extension):

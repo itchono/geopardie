@@ -1,7 +1,9 @@
-from naff import ModalContext, Embed, EmbedFooter, EmbedAuthor, EmbedField
+from naff import (Embed, EmbedAuthor, EmbedField,
+                  EmbedFooter, ModalContext, InteractionContext)
+from geopardie.framework.geopardie_constructs import GeopardieSessionResult
 
 
-def geopardie_embed(modal_ctx: ModalContext):
+def geopardie_start_embed(modal_ctx: ModalContext):
 
     prompt = modal_ctx.responses["modal_prompt"]
     answers = [modal_ctx.responses[f"modal_answer_{i+1}"]
@@ -24,3 +26,21 @@ def geopardie_embed(modal_ctx: ModalContext):
             text="Use the buttons to vote/unvote"))
 
     return embed
+
+def geopardie_showcase_start_embed(ctx: InteractionContext, results: GeopardieSessionResult):
+    '''
+    Embed to start showcasing a geopardie game
+    
+    The ctx contains a reference to the original message, including embed
+    '''
+    embed = Embed(title=results.prompt,
+                  author=EmbedAuthor(name=results.author.display_name,
+                                     icon_url=results.author.avatar.url),
+                  description="Voting has closed, time to reveal the results!")
+    
+    return embed
+    
+    
+    
+    
+    

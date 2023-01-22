@@ -1,12 +1,13 @@
 # Launch file for bot
 import os
 
-from geopardie.core.bot_client import CustomClient
-from geopardie.core.extension_loader import load_extensions
-from geopardie.core.init_logging import init_logging
 from dotenv import load_dotenv
 from naff import Intents
 from naff.ext.debug_extension import DebugExtension
+
+from geopardie.core.bot_client import CustomClient
+from geopardie.core.extension_loader import load_extensions
+from geopardie.core.init_logging import init_logging
 
 
 def main():
