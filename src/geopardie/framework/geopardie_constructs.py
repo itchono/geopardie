@@ -35,6 +35,10 @@ class PollButtonSession:
         effective_arr = [self.position_id] + self.voted_ids
         data_bytes = struct.pack(f">{len(effective_arr)}H", *effective_arr)
         return "gp_vote" + base64.b85encode(data_bytes).decode("utf-8")
+    
+    @property
+    def vote_count(self) -> int:
+        return len(self.voted_ids)
 
     @classmethod
     def deserialize(cls, string: str):

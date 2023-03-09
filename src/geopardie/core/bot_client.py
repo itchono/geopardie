@@ -9,6 +9,7 @@ class CustomClient(Client):
 
     # you can use that logger in all your extensions
     logger = logging.getLogger(logger_name)
+    logger.setLevel(logging.WARNING)
 
     # Default server ID for the bot, for slash commands
     default_scope = os.getenv("DEFAULT_GUILD_ID")
@@ -21,6 +22,3 @@ class CustomClient(Client):
         self.debug_scope = self.default_scope
 
         self.logger.info(f"Geopardie is online. Logged in as {self.user}")
-        self.logger.info(
-            "Note: Discord needs up to an hour to load your global commands / context menus. They may not appear immediately\n"
-        )
