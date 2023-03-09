@@ -1,13 +1,36 @@
-from naff import Button, InteractionContext, ButtonStyles
+from naff import (Button, InteractionContext, ButtonStyles, Embed,
+                  spread_to_rows, EmbedFooter)
 from geopardie.framework.geopardie_constructs import (PollButtonSession,
                                                       GeopardieSessionResult)
 from geopardie.framework.embed_prefabs import (geopardie_showcase_start_embed,
                                                geopardie_showcase_next_embed)
+import struct
 
 
 class GeopardieHandlersMixin:
     
     result_sessions: dict[tuple[int, int], GeopardieSessionResult] = {}
+    
+    async def send_geopardie_message(self, ctx: InteractionContext,
+                                     number_of_answers: int,
+                                     message_embed: Embed):
+        buttons = [Button(style=ButtonStyles.PRIMARY,
+                          label=f"{i+1}",
+                          custom_id=PollButtonSession(i).serialize)
+                   for i in range(number_of_answers)]
+
+        close_button = Button(style=ButtonStyles.DANGER,
+                              label="Close Voting",
+                              custom_id=f"gp_close_{ctx.author.id}",
+                              emoji="🗳️")
+        bump_button = Button(style=ButtonStyles.SECONDARY,
+                             label="Bump post further down",
+                             custom_id=f"gp_bump_{ctx.author.id}",
+                             emoji="⏬")
+
+        components = spread_to_rows(*(buttons + [close_button, bump_button]))
+
+        await ctx.send(embed=message_embed, components=components)
     
     
     async def handle_gp_vote(self, ctx: InteractionContext):
@@ -24,13 +47,22 @@ class GeopardieHandlersMixin:
         # Edit original message - update components
         msg_components = ctx.message.components
 
-        # Match position of button in components
+        total_votes = 0
+
+        # Match position of button in components, and calculate total votes
         for row in msg_components:
             button: Button
             for button in row.components:
                 if button.custom_id == ctx.custom_id:
                     # Update button
                     button.custom_id = button_session.serialize
+
+                if button.custom_id.startswith("gp_vote"):
+                    total_votes += PollButtonSession.deserialize(button.custom_id).vote_count
+                    
+        # Edit embed to reflect new vote count
+        ctx.message.embeds[0].footer = EmbedFooter(
+            text=f"Use the buttons to vote/unvote | Total Votes: {total_votes}")
 
         # Edit message (without responding to interaction)
         await ctx.message.edit(embed=ctx.message.embeds[0],
@@ -137,3 +169,25 @@ class GeopardieHandlersMixin:
         
         # Advance session
         session.position += 1
+        
+    async def handle_gp_bump(self, ctx: InteractionContext):
+        # Check that clicker is author
+        if ctx.author.id != int(ctx.custom_id[8:]):
+            return await ctx.send("You are not the author of this poll!",
+                                  ephemeral=True)
+            
+        num_responses = len(ctx.message.embeds[0].fields)
+            
+        # Send new message and disable all buttons on the old one
+        await self.send_geopardie_message(ctx, num_responses, ctx.message.embeds[0])
+        
+        
+        # Disable all buttons on old message
+        for row in ctx.message.components:
+            button: Button
+            for button in row.components:
+                button.disabled = True
+                
+        await ctx.message.edit(embed=ctx.message.embeds[0],
+                               components=ctx.message.components)
+        

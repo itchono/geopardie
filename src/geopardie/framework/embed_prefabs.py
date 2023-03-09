@@ -3,12 +3,8 @@ from naff import (Embed, EmbedAuthor, EmbedField,
 from geopardie.framework.geopardie_constructs import GeopardieSessionResult
 
 
-def geopardie_start_embed(modal_ctx: ModalContext):
-
-    prompt = modal_ctx.responses["modal_prompt"]
-    answers = [modal_ctx.responses[f"modal_answer_{i+1}"]
-               for i in range(len(modal_ctx.responses) - 1)]
-
+def geopardie_start_embed(modal_ctx: ModalContext,
+                          prompt: str, answers: list[str]):
     # Create an embed from a modal
     embed = Embed(
         title=f"**__POLL__:\n{prompt}**",
@@ -23,7 +19,7 @@ def geopardie_start_embed(modal_ctx: ModalContext):
                 value=answer) for i,
             answer in enumerate(answers)],
         footer=EmbedFooter(
-            text="Use the buttons to vote/unvote"))
+            text="Use the buttons to vote/unvote | Total Votes: 0"))
 
     return embed
 
